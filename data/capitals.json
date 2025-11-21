@@ -1,60 +1,44 @@
-{
-  "countries": [
-    {
-      "code": "ID",
-      "name": "Indonesia",
-      "capital": "Jakarta",
-      "region": "Asia",
-      "population": 273523621
-    },
-    {
-      "code": "JP",
-      "name": "Japan",
-      "capital": "Tokyo",
-      "region": "Asia",
-      "population": 125836021
-    },
-    {
-      "code": "FR",
-      "name": "France",
-      "capital": "Paris",
-      "region": "Europe",
-      "population": 67413000
-    },
-    {
-      "code": "DE",
-      "name": "Germany",
-      "capital": "Berlin",
-      "region": "Europe",
-      "population": 83240525
-    },
-    {
-      "code": "US",
-      "name": "United States",
-      "capital": "Washington, D.C.",
-      "region": "Americas",
-      "population": 331893745
-    },
-    {
-      "code": "BR",
-      "name": "Brazil",
-      "capital": "Brasília",
-      "region": "Americas",
-      "population": 212559409
-    },
-    {
-      "code": "NG",
-      "name": "Nigeria",
-      "capital": "Abuja",
-      "region": "Africa",
-      "population": 206139587
-    },
-    {
-      "code": "AU",
-      "name": "Australia",
-      "capital": "Canberra",
-      "region": "Oceania",
-      "population": 25687041
-    }
-  ]
-}
+[
+  {
+    "name": "Jakarta",
+    "country": "Indonesia",
+    "population": 10770487,
+    "lat": -6.2088,
+    "lng": 106.8456
+  },
+  {
+    "name": "Tokyo",
+    "country": "Japan",
+    "population": 13929286,
+    "lat": 35.6895,
+    "lng": 139.6917
+  },
+  {
+    "name": "Paris",
+    "country": "France",
+    "population": 2161000,
+    "lat": 48.8566,
+    "lng": 2.3522
+  },
+  {
+    "name": "Berlin",
+    "country": "Germany",
+    "population": 3644826,
+    "lat": 52.52,
+    "lng": 13.405
+  },
+  {
+    "name": "Washington, D.C.",
+    "country": "United States",
+    "population": 705749,
+    "lat": 38.9072,
+    "lng": -77.0369
+  },
+  {
+    "name": "Brasília",
+    "country": "Brazil",
+    "population": 3055149,
+    "lat": -15.8267,
+    "lng": -47.9218
+  }
+]

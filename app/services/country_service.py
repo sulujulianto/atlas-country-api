@@ -1,104 +1,69 @@
-import json
-from functools import lru_cache
-from pathlib import Path
-from random import choice
-from typing import Dict, List, Optional
+from typing import List
 
-from app.models import Country, RegionSummary
-
-DATA_PATH = Path(__file__).resolve().parents[2] / "data" / "capitals.json"
+from app.exceptions import BadRequestError, NotFoundError
+from app.models import CountryModel, PaginationMeta, PaginationRequest, SearchQueryModel
+from app.repositories import CountryRepository
+from app.utils import apply_numeric_filter, filter_by_list_field, matches_query, paginate_items
 
 
-class DataSourceError(RuntimeError):
-    """Raised when the country dataset cannot be found or read."""
+class CountryService:
+    def __init__(self, repository: CountryRepository):
+        self.repository = repository
 
+    def list_countries(self, pagination: PaginationRequest, query: SearchQueryModel | None = None) -> tuple[List[CountryModel], PaginationMeta]:
+        query = query or SearchQueryModel()
+        countries = self.repository.get_all_countries()
 
-@lru_cache(maxsize=1)
-def _load_dataset() -> List[Country]:
-    if not DATA_PATH.exists():
-        raise DataSourceError(f"Data file not found at {DATA_PATH}")
+        # name search (name or official_name or capital)
+        countries = matches_query(countries, lambda c: c.name, query.name)
+        if query.name:
+            # extend match on official_name and capital
+            base = self.repository.get_all_countries()
+            extras = [
+                *matches_query(base, lambda c: c.official_name, query.name),
+                *matches_query(base, lambda c: c.capital, query.name),
+            ]
+            countries = list({c.country_code: c for c in [*countries, *extras]}.values())
+        if query.region:
+            countries = [c for c in countries if c.region.lower() == query.region.lower()]
+        if query.subregion:
+            countries = [c for c in countries if c.subregion.lower() == query.subregion.lower()]
+        countries = apply_numeric_filter(countries, lambda c: c.population, query.min_population, query.max_population)
+        countries = apply_numeric_filter(countries, lambda c: c.area, query.min_area, query.max_area)
+        countries = filter_by_list_field(countries, lambda c: c.languages, query.language)
+        countries = filter_by_list_field(countries, lambda c: c.currencies, query.currency)
 
-    with open(DATA_PATH, "r") as file:
-        payload = json.load(file)
+        if query.sort_by:
+            if not hasattr(CountryModel, query.sort_by):
+                raise BadRequestError(f"Invalid sort field: {query.sort_by}")
+            descending = query.order == "desc"
+            countries = self.repository.sort(countries, query.sort_by, descending)
 
-    data = payload.get("countries")
-    if data is None:
-        raise DataSourceError("Dataset is missing 'countries' key")
+        items, meta = paginate_items(countries, pagination.page, pagination.size)
+        return items, meta
 
-    return [Country(**item) for item in data]
+    def get_by_code(self, code: str) -> CountryModel:
+        country = self.repository.get_country_by_code(code)
+        if not country:
+            raise NotFoundError(f"Country with code '{code}' not found")
+        return country
 
+    def get_by_region(self, region: str, pagination: PaginationRequest) -> tuple[List[CountryModel], PaginationMeta]:
+        countries = self.repository.get_by_region(region)
+        items, meta = paginate_items(countries, pagination.page, pagination.size)
+        return items, meta
 
-def get_countries() -> List[Country]:
-    # Return a shallow copy so callers cannot mutate the cached list.
-    return list(_load_dataset())
+    def get_by_subregion(self, subregion: str, pagination: PaginationRequest) -> tuple[List[CountryModel], PaginationMeta]:
+        countries = self.repository.get_by_subregion(subregion)
+        items, meta = paginate_items(countries, pagination.page, pagination.size)
+        return items, meta
 
+    def get_by_language(self, language: str, pagination: PaginationRequest) -> tuple[List[CountryModel], PaginationMeta]:
+        countries = filter_by_list_field(self.repository.get_all_countries(), lambda c: c.languages, language)
+        items, meta = paginate_items(countries, pagination.page, pagination.size)
+        return items, meta
 
-def filter_countries(region: Optional[str] = None, search: Optional[str] = None) -> List[Country]:
-    countries = get_countries()
-
-    if region:
-        region_lower = region.lower()
-        countries = [
-            country
-            for country in countries
-            if country.region and country.region.lower() == region_lower
-        ]
-
-    if search:
-        term = search.lower()
-        countries = [
-            country
-            for country in countries
-            if term in country.name.lower() or term in country.capital.lower()
-        ]
-
-    return countries
-
-
-def get_region_summaries(countries: List[Country]) -> List[RegionSummary]:
-    region_counts: Dict[str, int] = {}
-    for country in countries:
-        if not country.region:
-            continue
-
-        region_name = country.region.strip()
-        if not region_name:
-            continue
-
-        region_counts[region_name] = region_counts.get(region_name, 0) + 1
-
-    return [
-        RegionSummary(region=name, country_count=count)
-        for name, count in sorted(region_counts.items())
-    ]
-
-
-def find_by_code(country_code: str) -> Optional[Country]:
-    target = country_code.lower()
-    for country in get_countries():
-        if country.code.lower() == target:
-            return country
-    return None
-
-
-def find_by_name(country_name: str) -> Optional[Country]:
-    target = country_name.lower()
-    for country in get_countries():
-        if country.name.lower() == target:
-            return country
-    return None
-
-
-def random_country() -> Optional[Country]:
-    countries = get_countries()
-    if not countries:
-        return None
-    return choice(countries)
-
-
-def largest_population_country() -> Optional[Country]:
-    return max(get_countries(), key=lambda country: country.population or 0, default=None)
-
-
-def longest_name_country() -> Optional[Country]:
-    return max(get_countries(), key=lambda country: len(country.name), default=None)
+    def get_by_currency(self, currency: str, pagination: PaginationRequest) -> tuple[List[CountryModel], PaginationMeta]:
+        countries = filter_by_list_field(self.repository.get_all_countries(), lambda c: c.currencies, currency)
+        items, meta = paginate_items(countries, pagination.page, pagination.size)
+        return items, meta

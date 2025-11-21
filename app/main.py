@@ -1,47 +1,52 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
+from starlette import status
 
-from app.core import logging  # noqa: F401 - load logging configuration
-from app.core.exceptions import global_exception_handler, http_exception_handler
-from app.routes import capitals, statistics
+from app.config.settings import get_settings
+from app.exceptions import BadRequestError, NotFoundError, ValidationError
+from app.exceptions.handlers import (
+    bad_request_handler,
+    not_found_handler,
+    request_validation_handler,
+    unhandled_exception_handler,
+    validation_error_handler,
+)
+from app.routes import api_router
+from app.models.response_model import ResponseModel
 
 
 def create_app() -> FastAPI:
-    """
-    Application factory for the Atlas Country API.
-    This makes the app easier to test and extend in the future.
-    """
+    settings = get_settings()
     app = FastAPI(
-        title="Atlas Country API",
-        description=(
-            "A modern REST API that provides country and capital information, "
-            "including search, filtering, and basic region statistics."
-        ),
-        version="1.0.0",
+        title=settings.app_name,
+        description=settings.description,
+        version=settings.version,
+        contact={"name": settings.contact_name, "email": settings.contact_email},
+        license_info={"name": settings.license_name, "url": settings.license_url},
+        openapi_tags=[
+            {"name": "Countries", "description": "Country information, search, filtering, and metadata."},
+            {"name": "Capitals", "description": "Capital city data with search and lookup."},
+        ],
     )
 
-    app.add_exception_handler(HTTPException, http_exception_handler)
-    app.add_exception_handler(Exception, global_exception_handler)
+    app.include_router(api_router)
 
-    app.include_router(capitals.router)
-    app.include_router(statistics.router)
+    @app.get(
+        "/health",
+        response_model=ResponseModel,
+        tags=["Health"],
+        summary="Health Check",
+        description="Quick health check endpoint.",
+    )
+    async def health() -> ResponseModel:
+        return ResponseModel(status="success", data={"status": "ok"}, meta=None, error=None)
 
-    @app.get("/health", tags=["Health"])
-    def health_check():
-        """
-        Simple health check endpoint to verify that the API is running.
-        """
-        return {"status": "ok", "message": "Atlas Country API is running"}
-
-    @app.get("/", include_in_schema=False)
-    def root():
-        """
-        Root endpoint that redirects users to the API documentation.
-        """
-        return {
-            "message": "Welcome to the Atlas Country API.",
-            "docs_url": "/docs",
-            "openapi_url": "/openapi.json",
-        }
+    # Exception handlers
+    app.add_exception_handler(NotFoundError, not_found_handler)
+    app.add_exception_handler(BadRequestError, bad_request_handler)
+    app.add_exception_handler(ValidationError, validation_error_handler)
+    app.add_exception_handler(RequestValidationError, request_validation_handler)
+    app.add_exception_handler(Exception, unhandled_exception_handler)
 
     return app
 
