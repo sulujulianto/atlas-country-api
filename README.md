@@ -1,31 +1,28 @@
 # Atlas Country API
 
-![CI](https://img.shields.io/github/actions/workflow/status/edo/atlas-country-api/backend-ci.yml?label=CI&logo=github)
+![CI](https://img.shields.io/github/actions/workflow/status/sulujulianto/atlas-country-api/backend-ci.yml?label=CI)
 ![Coverage](https://img.shields.io/badge/coverage-90%25-green)
 ![Python](https://img.shields.io/badge/python-3.12-blue)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
-Production-ready FastAPI backend delivering rich country and capital data with layered architecture, strict validation, structured logging, and CI/CD.
+Production-ready FastAPI backend for country & capital data with layered architecture, strict validation, structured logging, and CI/CD.
 
 ## Demo
-![Demo](https://img.shields.io/badge/demo-GIF-placeholder-blue)
+- Swagger UI: http://127.0.0.1:8000/docs
+- Health: http://127.0.0.1:8000/health
 
 ## Features
 - Countries: list/search/filter by region/subregion/language/currency, sort, paginate, get by code.
 - Capitals: list/search/sort/paginate, get by name.
-- Statistics: totals, top populations, region & language distribution.
-- Strict DTO schemas, unified responses, documented error codes (`ERR_*`).
+- Statistics: totals, top population, region & language distribution.
+- Strict DTOs, unified responses, documented error codes (`ERR_*`).
 - Security: CORS, security headers, basic rate limiting, request IDs, structured JSON logs.
 - Docker & GitHub Actions CI (lint, mypy, bandit, tests, coverage).
 
 ## Architecture (high level)
-```
-routes (controllers) -> services (business logic) -> repositories (data access) -> data/json
-             ^            |-> utils (search, filters, pagination)  
-             |            |-> exceptions (errors + handlers)  
-             |-> schemas (DTOs)      models (domain entities)  
-core (logging, security)  config (settings)
-```
+- routes (controllers) → services (business logic) → repositories (data access) → data/json
+- utils (search, filters, pagination), schemas (DTO), exceptions (errors + handlers)
+- core (logging, security), config (settings)
 
 ## Quickstart
 ```bash
@@ -34,32 +31,15 @@ source .venv/bin/activate
 pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
-- Docs: http://127.0.0.1:8000/docs
-- Health: http://127.0.0.1:8000/health
 
 ## Docker
+Build & run:
 ```bash
 docker-compose up --build
 # or
-docker build -t atlas-api . && docker run -p 8000:8000 atlas-api
-```
-
-# Running with Docker
-Build the image:
-```bash
 docker build -t atlas-api .
-```
-
-Run the container:
-```bash
 docker run -p 8000:8000 atlas-api
-# or for local dev with hot-reload:
-docker-compose up --build
 ```
-
-Access the API:
-- Swagger UI: http://127.0.0.1:8000/docs
-- Health check: http://127.0.0.1:8000/health
 
 ## Tests & Coverage
 ```bash
@@ -73,7 +53,6 @@ Artifacts: `coverage.xml`, `pytest-report.html`, `htmlcov/`.
 - Capitals: `/capitals`, `/capitals/{name}`
 - Statistics: `/statistics/totals`, `/statistics/top-population/largest`, `/statistics/top-population/smallest`, `/statistics/regions`, `/statistics/languages`
 - Health: `/health`
-Detailed tables in `docs/ENDPOINTS.md`.
 
 ## Data Model Example
 ```json
