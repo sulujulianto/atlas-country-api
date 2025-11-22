@@ -20,7 +20,7 @@ class CapitalService:
     def list_capitals(
         self,
         pagination: PaginationModel,
-        query: SearchModel | None = None,
+        query: SearchModel,
     ) -> Tuple[List[CapitalModel], PaginationMetaModel]:
         """
         Return capitals matching search criteria with pagination.
@@ -28,7 +28,6 @@ class CapitalService:
         - Text search by name (case-insensitive partial).
         - Optional sorting by any valid CapitalModel field.
         """
-        query = query or SearchModel()
         capitals = self.repository.get_all_capitals()
         capitals = matches_query(capitals, lambda c: c.name, query.name)
 

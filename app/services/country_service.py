@@ -20,7 +20,7 @@ class CountryService:
     def list_countries(
         self,
         pagination: PaginationModel,
-        query: SearchModel | None = None,
+        query: SearchModel,
     ) -> Tuple[List[CountryModel], PaginationMetaModel]:
         """
         Return countries matching search/filter criteria with pagination.
@@ -31,7 +31,6 @@ class CountryService:
         - Language/currency membership filters.
         - Sorting by any valid CountryModel field.
         """
-        query = query or SearchModel()
         countries = self.repository.get_all_countries()
 
         # Text search: name
