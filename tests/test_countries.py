@@ -42,3 +42,27 @@ def test_language_and_currency_filters():
     assert resp_currency.status_code == 200
     names = {c["name"] for c in resp_currency.json()["data"]}
     assert names == {"France", "Germany"}
+
+
+def test_get_country_by_code_returns_404_for_unknown_code():
+    resp = client.get("/countries/ZZZ")
+    assert resp.status_code == 404
+    payload = resp.json()
+    assert payload["status"] == "error"
+    assert payload["code"] == "ERR_NOT_FOUND"
+
+
+def test_list_countries_returns_422_for_invalid_pagination():
+    # page cannot be 0, size cannot exceed 100
+    resp_page = client.get("/countries?page=0&size=10")
+    assert resp_page.status_code == 422
+    resp_size = client.get("/countries?page=1&size=101")
+    assert resp_size.status_code == 422
+
+
+def test_search_returns_empty_for_no_matches():
+    resp = client.get("/countries/search?name=nonexistentvalue")
+    assert resp.status_code == 200
+    payload = resp.json()
+    assert payload["data"] == []
+    assert payload["meta"]["total_items"] == 0

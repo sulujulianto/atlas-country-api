@@ -1,7 +1,11 @@
+"""Domain entity representing a capital city."""
+
 from pydantic import BaseModel, ConfigDict, Field
 
 
 class CapitalModel(BaseModel):
+    """Capital domain model with location and population metadata."""
+
     model_config = ConfigDict(
         extra="forbid",
         json_schema_extra={
@@ -15,8 +19,8 @@ class CapitalModel(BaseModel):
         },
     )
 
-    name: str = Field(...)
-    country: str = Field(...)
-    population: int = Field(..., ge=0)
-    lat: float = Field(..., ge=-90, le=90)
-    lng: float = Field(..., ge=-180, le=180)
+    name: str = Field(..., description="Capital name")
+    country: str = Field(..., description="Country name this capital belongs to")
+    population: int = Field(..., ge=0, description="Capital city population")
+    lat: float = Field(..., ge=-90, le=90, description="Latitude")
+    lng: float = Field(..., ge=-180, le=180, description="Longitude")

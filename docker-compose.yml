@@ -1,0 +1,15 @@
+version: "3.9"
+
+services:
+  api:
+    build: .
+    container_name: atlas-country-api
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - ATLAS_ENV=dev
+      - ATLAS_LOG_LEVEL=INFO
+      - ATLAS_RATE_LIMIT_PER_MINUTE=120

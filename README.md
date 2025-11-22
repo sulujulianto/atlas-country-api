@@ -1,29 +1,82 @@
 # Atlas Country API
 
-Production-grade REST API built with FastAPI delivering rich country and capital data, with layered architecture, validation, pagination, sorting, filtering, and comprehensive tests.
+![CI](https://img.shields.io/github/actions/workflow/status/edo/atlas-country-api/backend-ci.yml?label=CI&logo=github)
+![Coverage](https://img.shields.io/badge/coverage-90%25-green)
+![Python](https://img.shields.io/badge/python-3.12-blue)
+![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
-## Overview
-- Layered design: routes → services → repositories → utils, with strict typing and schema validation.
-- Rich data domain: countries (region, subregion, borders, languages, currencies, geo, population, area) and capitals.
-- Professional OpenAPI docs with contact, license, tags, and examples.
-- Robust error handling and consistent response envelope.
+Production-ready FastAPI backend delivering rich country and capital data with layered architecture, strict validation, structured logging, and CI/CD.
+
+## Demo
+![Demo](https://img.shields.io/badge/demo-GIF-placeholder-blue)
 
 ## Features
-- Countries: list, search, region/subregion/language/currency filters, sorting, pagination, get by code.
-- Capitals: list with search/sort/pagination, get by name.
-- Validation: strict Pydantic models, query validation, and custom errors (400/404/422).
-- Error responses are structured with `status`, `code`, `message`, and `details`.
-- Data loaded from JSON with schema checks and caching.
+- Countries: list/search/filter by region/subregion/language/currency, sort, paginate, get by code.
+- Capitals: list/search/sort/paginate, get by name.
+- Statistics: totals, top populations, region & language distribution.
+- Strict DTO schemas, unified responses, documented error codes (`ERR_*`).
+- Security: CORS, security headers, basic rate limiting, request IDs, structured JSON logs.
+- Docker & GitHub Actions CI (lint, mypy, bandit, tests, coverage).
 
-## Tech Stack
-- FastAPI + Uvicorn
-- Pydantic v2 for strict models
-- pytest for automated tests
-- JSON data source (no DB dependency)
+## Architecture (high level)
+```
+routes (controllers) -> services (business logic) -> repositories (data access) -> data/json
+             ^            |-> utils (search, filters, pagination)  
+             |            |-> exceptions (errors + handlers)  
+             |-> schemas (DTOs)      models (domain entities)  
+core (logging, security)  config (settings)
+```
 
-## Data Model Examples
+## Quickstart
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload
+```
+- Docs: http://127.0.0.1:8000/docs
+- Health: http://127.0.0.1:8000/health
+
+## Docker
+```bash
+docker-compose up --build
+# or
+docker build -t atlas-api . && docker run -p 8000:8000 atlas-api
+```
+
+# Running with Docker
+Build the image:
+```bash
+docker build -t atlas-api .
+```
+
+Run the container:
+```bash
+docker run -p 8000:8000 atlas-api
+# or for local dev with hot-reload:
+docker-compose up --build
+```
+
+Access the API:
+- Swagger UI: http://127.0.0.1:8000/docs
+- Health check: http://127.0.0.1:8000/health
+
+## Tests & Coverage
+```bash
+pytest --maxfail=1 --disable-warnings
+coverage run -m pytest && coverage report
+```
+Artifacts: `coverage.xml`, `pytest-report.html`, `htmlcov/`.
+
+## Endpoint Preview
+- Countries: `/countries`, `/countries/{code}`, `/countries/search`, `/countries/region/{region}`, `/countries/subregion/{subregion}`, `/countries/language/{language}`, `/countries/currency/{currency}`
+- Capitals: `/capitals`, `/capitals/{name}`
+- Statistics: `/statistics/totals`, `/statistics/top-population/largest`, `/statistics/top-population/smallest`, `/statistics/regions`, `/statistics/languages`
+- Health: `/health`
+Detailed tables in `docs/ENDPOINTS.md`.
+
+## Data Model Example
 ```json
-// CountryModel
 {
   "name": "Indonesia",
   "official_name": "Republic of Indonesia",
@@ -41,72 +94,36 @@ Production-grade REST API built with FastAPI delivering rich country and capital
 }
 ```
 
-## Endpoints (high level)
-- Countries:
-  - `GET /countries` (pagination, sort, filters, search)
-  - `GET /countries/{code}`
-  - `GET /countries/search`
-  - `GET /countries/region/{region}`
-  - `GET /countries/subregion/{subregion}`
-  - `GET /countries/language/{language}`
-  - `GET /countries/currency/{currency}`
-- Capitals:
-  - `GET /capitals`
-  - `GET /capitals/{name}`
-- Health:
-  - `GET /health`
-
-## Example Usage
-List European countries, sorted by population descending:
-```bash
-curl "http://127.0.0.1:8000/countries?region=Europe&sort_by=population&order=desc&page=1&size=10"
-```
-
-Search by name with population filter:
-```bash
-curl "http://127.0.0.1:8000/countries/search?name=an&min_population=50000000"
-```
-
-Get capital by name:
-```bash
-curl "http://127.0.0.1:8000/capitals/Tokyo"
-```
-
-## Run Locally
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload
-```
-
-## Testing
-```bash
-pytest
-```
-
 ## Folder Structure
 ```
 app/
  ├── main.py
  ├── config/
+ ├── core/
  ├── routes/
  ├── services/
  ├── repositories/
  ├── models/
  ├── utils/
  └── exceptions/
+schemas/
 data/
 tests/
+docs/
+.github/workflows/
 ```
 
-## Contribution Guide
-- Use feature branches and open PRs with clear descriptions.
-- Keep coverage by adding/maintaining tests for new code paths.
-- Follow PEP8 and run `pytest` before submitting.
+## CI/CD
+- Workflow: `.github/workflows/backend-ci.yml`
+  - ruff, mypy, bandit
+  - pytest + coverage (fail <85%)
+  - artifacts: coverage.xml, pytest report, htmlcov
+
+## Contribution
+See `docs/CONTRIBUTING.md`.
 
 ## Roadmap
-- Add authentication/authorization layer.
-- Add caching headers and ETags.
-- Plug-in external datasets or database backend.
-- Add CI pipeline (lint + tests). 
+- JWT auth option
+- ETags/caching
+- Pluggable DB repository
+- Observability dashboards

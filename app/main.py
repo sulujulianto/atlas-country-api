@@ -1,7 +1,8 @@
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
-from starlette import status
 
+from app.core.logging import RequestLoggingMiddleware, configure_logging
+from app.core.security import RateLimiterMiddleware, SecurityHeadersMiddleware, configure_cors
 from app.config.settings import get_settings
 from app.exceptions import BadRequestError, NotFoundError, ValidationError
 from app.exceptions.handlers import (
@@ -12,11 +13,13 @@ from app.exceptions.handlers import (
     validation_error_handler,
 )
 from app.routes import api_router
-from app.models.response_model import ResponseModel
+from schemas import ResponseSchema
 
 
 def create_app() -> FastAPI:
     settings = get_settings()
+    configure_logging()
+
     app = FastAPI(
         title=settings.app_name,
         description=settings.description,
@@ -26,20 +29,26 @@ def create_app() -> FastAPI:
         openapi_tags=[
             {"name": "Countries", "description": "Country information, search, filtering, and metadata."},
             {"name": "Capitals", "description": "Capital city data with search and lookup."},
+            {"name": "Statistics", "description": "Aggregated analytics over countries and capitals."},
         ],
     )
+
+    configure_cors(app)
+    app.add_middleware(RequestLoggingMiddleware)
+    app.add_middleware(SecurityHeadersMiddleware)
+    app.add_middleware(RateLimiterMiddleware)
 
     app.include_router(api_router)
 
     @app.get(
         "/health",
-        response_model=ResponseModel,
+        response_model=ResponseSchema,
         tags=["Health"],
         summary="Health Check",
         description="Quick health check endpoint.",
     )
-    async def health() -> ResponseModel:
-        return ResponseModel(status="success", data={"status": "ok"}, meta=None, error=None)
+    async def health() -> ResponseSchema:
+        return ResponseSchema(status="success", data={"status": "ok"}, meta=None, error=None)
 
     # Exception handlers
     app.add_exception_handler(NotFoundError, not_found_handler)

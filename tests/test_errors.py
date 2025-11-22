@@ -10,7 +10,7 @@ def test_not_found_country():
     assert resp.status_code == 404
     payload = resp.json()
     assert payload["status"] == "error"
-    assert payload["code"] == 404
+    assert payload["code"] == "ERR_NOT_FOUND"
 
 
 def test_bad_request_sort_field():
@@ -18,7 +18,7 @@ def test_bad_request_sort_field():
     assert resp.status_code == 400
     payload = resp.json()
     assert payload["status"] == "error"
-    assert payload["code"] == 400
+    assert payload["code"] == "ERR_BAD_REQUEST"
 
 
 def test_validation_error_missing_param():
@@ -26,4 +26,19 @@ def test_validation_error_missing_param():
     assert resp.status_code == 422
     payload = resp.json()
     assert payload["status"] == "error"
-    assert payload["code"] == 422
+    assert payload["code"] == "ERR_VALIDATION"
+
+
+def test_statistics_limit_bad_request():
+    resp = client.get("/statistics/top-population/largest?limit=0")
+    assert resp.status_code == 422
+    payload = resp.json()
+    assert payload["code"] == "ERR_VALIDATION"
+
+
+def test_validation_error_for_negative_page():
+    resp = client.get("/countries?page=-1&size=10")
+    assert resp.status_code == 422
+    payload = resp.json()
+    assert payload["status"] == "error"
+    assert payload["code"] == "ERR_VALIDATION"

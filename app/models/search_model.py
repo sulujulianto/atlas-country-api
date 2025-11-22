@@ -1,9 +1,13 @@
+"""Domain search model capturing filters and sorting preferences."""
+
 from typing import Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
 
-class SearchQueryModel(BaseModel):
+class SearchModel(BaseModel):
+    """Search and filter criteria for country/capital lookups."""
+
     model_config = ConfigDict(
         extra="forbid",
         json_schema_extra={
@@ -23,14 +27,14 @@ class SearchQueryModel(BaseModel):
         },
     )
 
-    name: Optional[str] = Field(None)
-    region: Optional[str] = Field(None)
-    subregion: Optional[str] = Field(None)
-    min_population: Optional[int] = Field(None, ge=0)
-    max_population: Optional[int] = Field(None, ge=0)
-    min_area: Optional[float] = Field(None, ge=0)
-    max_area: Optional[float] = Field(None, ge=0)
-    language: Optional[str] = Field(None)
-    currency: Optional[str] = Field(None)
-    sort_by: Optional[str] = Field(None, description="Field name to sort by")
-    order: Literal["asc", "desc"] = Field("asc")
+    name: Optional[str] = Field(None, description="Partial, case-insensitive match on name/official_name/capital.")
+    region: Optional[str] = Field(None, description="Region filter.")
+    subregion: Optional[str] = Field(None, description="Subregion filter.")
+    min_population: Optional[int] = Field(None, ge=0, description="Minimum population.")
+    max_population: Optional[int] = Field(None, ge=0, description="Maximum population.")
+    min_area: Optional[float] = Field(None, ge=0, description="Minimum area.")
+    max_area: Optional[float] = Field(None, ge=0, description="Maximum area.")
+    language: Optional[str] = Field(None, description="Language filter.")
+    currency: Optional[str] = Field(None, description="Currency filter.")
+    sort_by: Optional[str] = Field(None, description="Field to sort by.")
+    order: Literal["asc", "desc"] = Field("asc", description="Sort order.")
