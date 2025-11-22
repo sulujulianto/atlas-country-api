@@ -1,6 +1,6 @@
 """Filtering helpers for numeric ranges, region/subregion, and list membership."""
 
-from typing import Callable, Iterable, List, Sequence, TypeVar
+from typing import Callable, Iterable, List, TypeVar
 
 T = TypeVar("T")
 

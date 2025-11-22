@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Query
 from app.models import PaginationModel, SearchModel
 from app.repositories import CountryRepository
 from app.services import CountryService
-from schemas import PaginationRequestSchema, ResponseSchema, SearchQuerySchema
+from schemas import ResponseSchema
 
 DATA_PATH = Path(__file__).resolve().parents[2] / "data" / "countries.json"
 
