@@ -29,7 +29,8 @@ class AppSettings(BaseModel):
         if origins_env:
             cors_origins = [o.strip() for o in origins_env.split(",") if o.strip()]
         else:
-            cors_origins = cls.model_fields["cors_origins"].default_factory() if cls.model_fields["cors_origins"].default_factory else ["*"]
+            factory = cls.model_fields["cors_origins"].default_factory
+            cors_origins = factory() if factory is not None else ["*"]
 
         return cls(
             app_name=os.getenv("ATLAS_APP_NAME", cls.model_fields["app_name"].default),
