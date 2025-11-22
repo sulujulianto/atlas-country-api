@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Optional
+from typing import Literal, Optional, cast
 
 from fastapi import APIRouter, Depends, Query
 
@@ -43,12 +43,13 @@ async def list_countries(
     language: Optional[str] = Query(default=None, description="Filter by language"),
     currency: Optional[str] = Query(default=None, description="Filter by currency"),
     sort_by: Optional[str] = Query(default=None, description="Field to sort by"),
-    order: str = Query(default="asc", pattern="^(asc|desc)$", description="Sort order"),
+    order: Literal["asc", "desc"] = Query(default="asc", description="Sort order"),
     service: CountryService = Depends(get_country_service),
 ) -> ResponseSchema:
     def _clean(value: Optional[str]) -> Optional[str]:
         return value.strip() if isinstance(value, str) else value
 
+    order_value = cast(Literal["asc", "desc"], _clean(order) or "asc")
     query = SearchModel(
         name=_clean(name),
         region=_clean(region),
@@ -60,7 +61,7 @@ async def list_countries(
         language=_clean(language),
         currency=_clean(currency),
         sort_by=_clean(sort_by),
-        order=_clean(order) or "asc",
+        order=order_value,
     )
     pagination = PaginationModel(page=int(page), size=int(size))
     items, meta = service.list_countries(pagination, query)
@@ -86,40 +87,26 @@ async def search_countries(
     language: Optional[str] = Query(default=None, description="Filter by language"),
     currency: Optional[str] = Query(default=None, description="Filter by currency"),
     sort_by: Optional[str] = Query(default=None, description="Field to sort by"),
-    order: str = Query(default="asc", pattern="^(asc|desc)$", description="Sort order"),
+    order: Literal["asc", "desc"] = Query(default="asc", description="Sort order"),
     service: CountryService = Depends(get_country_service),
 ) -> ResponseSchema:
-    def _clean(value):
+    def _clean(value: Optional[str]) -> Optional[str]:
         return value.strip() if isinstance(value, str) else value
 
-    page = int(page)
-    size = int(size)
-    name = _clean(name)
-    region = _clean(region)
-    subregion = _clean(subregion)
-    min_population = min_population
-    max_population = max_population
-    min_area = min_area
-    max_area = max_area
-    language = _clean(language)
-    currency = _clean(currency)
-    sort_by = _clean(sort_by)
-    order = _clean(order)
-
     query = SearchModel(
-        name=name,
-        region=region,
-        subregion=subregion,
+        name=_clean(name),
+        region=_clean(region),
+        subregion=_clean(subregion),
         min_population=min_population,
         max_population=max_population,
         min_area=min_area,
         max_area=max_area,
-        language=language,
-        currency=currency,
-        sort_by=sort_by,
-        order=order,
+        language=_clean(language),
+        currency=_clean(currency),
+        sort_by=_clean(sort_by),
+        order=cast(Literal["asc", "desc"], _clean(order) or "asc"),
     )
-    pagination = PaginationModel(page=page, size=size)
+    pagination = PaginationModel(page=int(page), size=int(size))
     items, meta = service.list_countries(pagination, query)
     return build_response(data=[item.model_dump() for item in items], meta=meta)
 

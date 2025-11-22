@@ -2,7 +2,7 @@ import logging
 import time
 import uuid
 from contextvars import ContextVar
-from typing import Callable
+from typing import Callable, Union
 
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -53,7 +53,7 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
         request_id = str(uuid.uuid4())
         _request_id_ctx.set(request_id)
         start = time.perf_counter()
-        response: Response
+        response: Response | None = None
         try:
             response = await call_next(request)
             return response
@@ -65,9 +65,7 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
             raise exc
         finally:
             duration_ms = (time.perf_counter() - start) * 1000
-            status_code = (
-                locals().get("response").status_code if "response" in locals() else "n/a"
-            )
+            status_code: Union[int, str] = response.status_code if response is not None else "n/a"
             self.logger.info(
                 "HTTP request",
                 extra={
@@ -79,5 +77,5 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
                     }
                 },
             )
-            if "response" in locals():
+            if response is not None:
                 response.headers["X-Request-ID"] = request_id

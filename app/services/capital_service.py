@@ -31,12 +31,13 @@ class CapitalService:
         capitals = self.repository.get_all_capitals()
         capitals = matches_query(capitals, lambda c: c.name, query.name)
 
-        if query.sort_by:
+        if query.sort_by is not None:
             if query.sort_by not in CapitalModel.model_fields:
                 self.logger.warning("Invalid capital sort field", extra={"extra": {"sort_by": query.sort_by}})
                 raise BadRequestError(f"Invalid sort field: {query.sort_by}", {"sort_by": query.sort_by})
             descending = query.order == "desc"
-            capitals = sorted(capitals, key=lambda c: getattr(c, query.sort_by), reverse=descending)
+            sort_field = query.sort_by
+            capitals = sorted(capitals, key=lambda c: getattr(c, sort_field), reverse=descending)
 
         items, meta = paginate_items(capitals, pagination.page, pagination.size)
         return items, meta

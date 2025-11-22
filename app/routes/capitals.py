@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Optional
+from typing import Literal, Optional, cast
 
 from fastapi import APIRouter, Depends, Query
 
@@ -33,7 +33,7 @@ async def list_capitals(
     size: int = Query(default=10, ge=1, le=100, description="Page size"),
     name: Optional[str] = Query(default=None, description="Search term for capital name"),
     sort_by: Optional[str] = Query(default=None, description="Field to sort by (e.g., population)"),
-    order: str = Query(default="asc", pattern="^(asc|desc)$", description="Sort order"),
+    order: Literal["asc", "desc"] = Query(default="asc", description="Sort order"),
     service: CapitalService = Depends(get_capital_service),
 ) -> ResponseSchema:
     def _clean(value):
@@ -42,7 +42,15 @@ async def list_capitals(
     query = SearchModel(
         name=_clean(name),
         sort_by=_clean(sort_by),
-        order=_clean(order) or "asc",
+        order=cast(Literal["asc", "desc"], _clean(order) or "asc"),
+        region=None,
+        subregion=None,
+        min_population=None,
+        max_population=None,
+        min_area=None,
+        max_area=None,
+        language=None,
+        currency=None,
     )
     pagination = PaginationModel(page=int(page), size=int(size))
     items, meta = service.list_capitals(pagination, query)

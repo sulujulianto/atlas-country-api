@@ -59,12 +59,13 @@ class CountryService:
         countries = filter_by_list_field(countries, lambda c: c.currencies, query.currency)
 
         # Sorting
-        if query.sort_by:
+        if query.sort_by is not None:
             if query.sort_by not in CountryModel.model_fields:
                 self.logger.warning("Invalid sort field", extra={"extra": {"sort_by": query.sort_by}})
                 raise BadRequestError(f"Invalid sort field: {query.sort_by}", {"sort_by": query.sort_by})
             descending = query.order == "desc"
-            countries = sorted(countries, key=lambda c: getattr(c, query.sort_by), reverse=descending)
+            sort_field = query.sort_by
+            countries = sorted(countries, key=lambda c: getattr(c, sort_field), reverse=descending)
 
         items, meta = paginate_items(countries, pagination.page, pagination.size)
         return items, meta

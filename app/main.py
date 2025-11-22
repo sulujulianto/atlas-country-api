@@ -51,10 +51,10 @@ def create_app() -> FastAPI:
         return ResponseSchema(status="success", data={"status": "ok"}, meta=None, error=None)
 
     # Exception handlers
-    app.add_exception_handler(NotFoundError, not_found_handler)
-    app.add_exception_handler(BadRequestError, bad_request_handler)
-    app.add_exception_handler(ValidationError, validation_error_handler)
-    app.add_exception_handler(RequestValidationError, request_validation_handler)
+    app.add_exception_handler(NotFoundError, not_found_handler)  # type: ignore[arg-type]
+    app.add_exception_handler(BadRequestError, bad_request_handler)  # type: ignore[arg-type]
+    app.add_exception_handler(ValidationError, validation_error_handler)  # type: ignore[arg-type]
+    app.add_exception_handler(RequestValidationError, request_validation_handler)  # type: ignore[arg-type]
     app.add_exception_handler(Exception, unhandled_exception_handler)
 
     return app
